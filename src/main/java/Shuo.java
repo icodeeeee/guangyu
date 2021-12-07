@@ -1,11 +1,9 @@
 import com.alibaba.fastjson.JSON;
 
 import java.io.*;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class Shuo {
@@ -31,45 +29,68 @@ public class Shuo {
 
 
     public static void main(String[] args) throws IOException {
-        String sb = readFile("shuo.json");
+
+        //原始乐谱名称
+        String fileName = "夜的第七章(1).txt";
+
+        String sb = readFile(fileName, "yp").replaceAll("2K", "1K");
+        String template = readFile("TEMPLATE.js", "yp");
+
         List<YPBean> ypBeans = JSON.parseArray(sb, YPBean.class);
-        System.out.println(JSON.toJSONString(ypBeans));
         if (ypBeans == null || ypBeans.size() == 0) return;
-        AtomicReference<Integer> lastTime = new AtomicReference<>(ypBeans.get(0).getSongNotes().get(0).getTime());
         StringBuilder sbOut = new StringBuilder("[");
-        LinkedList<String> z = (new LinkedList<>());
-        List<SongNotesDTO> songNotes = ypBeans.get(0).getSongNotes();
-        for (int i = 0; i < songNotes.size(); i++) {
-            SongNotesDTO item = songNotes.get(i);
-            String val = "[0,51," + JSON.toJSONString(key.get(item.getKey())) + "],";
-            if (lastTime.get() !=item.getTime()) {
-                if (z.size() > 0) {
-                    //处理队内数据
-                    sbOut.append("[");
-                    for (int i1 = 0; i1 < z.size(); i1++) {
-                        sbOut.append(z.get(i1));
-                    }
-                    sbOut.append("],");
-                }
-                z = new LinkedList<>();
-                sbOut.append(val);
-            } else {
-                z.add(val);
+        LinkedList<SongNotesDTO> songNotesTemp = ypBeans.get(0).getSongNotes();
+        LinkedHashMap<Integer, List<SongNotesDTO>> collect = new LinkedHashMap<Integer, List<SongNotesDTO>>() {{
+            Map<Integer, List<SongNotesDTO>> collect1 = songNotesTemp.stream().collect(Collectors.groupingBy(songNotesDTO -> songNotesDTO.getTime()));
+            List<Integer> integers = collect1.keySet().stream().sorted().collect(Collectors.toList());
+            for (int i = 0; i < integers.size(); i++) {
+                put(integers.get(i), collect1.get(integers.get(i)));
             }
-            System.out.println(lastTime);
-            System.out.println(item.getTime());
-            lastTime.set(item.getTime());
+        }};
+
+        LinkedList<List<SongNotesDTO>> songNotes = new LinkedList<>(collect.values());
+
+        for (int i = 0; i < songNotes.size(); i++) {
+            List<SongNotesDTO> items = songNotes.get(i);
+            if (items.size() == 1) {
+                //单键
+                SongNotesDTO item = items.get(0);
+                String val = "[0,51," + JSON.toJSONString(key.get(item.getKey())) + "],";
+                sbOut.append("[");
+                sbOut.append(val);
+                sbOut.append("],");
+            } else {
+                sbOut.append("[");
+                //多键
+                for (int i1 = 0; i1 < items.size(); i1++) {
+                    SongNotesDTO item = items.get(i1);
+                    String val = "[0,51," + JSON.toJSONString(key.get(item.getKey())) + "],";
+                    sbOut.append(val);
+                }
+                sbOut.append("],");
+            }
         }
         sbOut.append("]");
 
-        System.out.println("键位->"+sbOut.toString());
-        List<Integer> collect = songNotes.stream().map(SongNotesDTO::getTime).collect(Collectors.toList());
-        System.out.println("休眠->"+collect.toString());
-
+        LinkedList<Integer> sl = new LinkedList<>(collect.keySet());
+        LinkedList<Integer> slEnd = new LinkedList<Integer>() {{
+            for (int i = 0; i < sl.size(); i++) {
+                Integer item = sl.get(i);
+                if (i == 0) {
+                    add(item);
+                } else {
+                    add(item - sl.get(i - 1));
+                }
+            }
+        }};
+        template = template.replaceAll("\\[key\\]", sbOut.toString())
+                .replaceAll("\\[sleep\\]", JSON.toJSONString(slEnd));
+        writeStringToFile(template, fileName.split("\\.")[0], "output");
+        System.out.println("操作完成");
     }
 
-    public static String readFile(String fileName) throws IOException {
-        String basePath = "/Users/satan/Documents/pft-project/imot-project/miot_project/ihive-miot-webserver/branches/guangyu/src/main/java/yp/";
+    public static String readFile(String fileName, String pdir) throws IOException {
+        String basePath = "/Users/satan/Documents/pft-project/imot-project/miot_project/ihive-miot-webserver/branches/guangyu/src/main/java/" + pdir + "/";
         //名称
         File file = new File(basePath + fileName);
         if (!file.exists()) return null;
@@ -81,6 +102,21 @@ public class Shuo {
         while ((s = br.readLine()) != null) {
             sb.append(s).append("\n");
         }
+        br.close();
+        return sb.toString();
+    }
+
+    public static String writeStringToFile(String data, String fileName, String pdir) throws IOException {
+        String basePath = "/Users/satan/Documents/pft-project/imot-project/miot_project/ihive-miot-webserver/branches/guangyu/src/main/java/" + pdir + "/";
+        //名称
+        File file = new File(basePath + fileName + ".js");
+        if (!file.exists()) file.createNewFile();
+
+        StringBuilder sb = new StringBuilder();
+
+        BufferedWriter br = new BufferedWriter(new FileWriter(file));
+        String s = null;
+        br.write(data);
         br.close();
         return sb.toString();
     }

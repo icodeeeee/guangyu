@@ -1,11 +1,10 @@
 import lombok.Data;
 
-import java.util.LinkedList;
 import java.util.List;
 
 
 @Data
-public class YPBean {
+public class YPBeanList {
 
     private String name;
     private String author;
@@ -15,5 +14,5 @@ public class YPBean {
     private Integer bpm;
     private Integer bitsPerPage;
     private Integer pitchLevel;
-    private LinkedList<SongNotesDTO> songNotes;
+    private List<List<SongNotesDTO>> songNotes;
 }
