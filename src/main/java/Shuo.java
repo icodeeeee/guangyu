@@ -2,12 +2,17 @@ import com.alibaba.fastjson.JSON;
 
 import java.io.*;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class Shuo {
     public static Map<String, Integer[]> key = new HashMap<String, Integer[]>() {{
+
+        //琴键点位，可自行开启触控显示定位每个琴键
+        /**
+         * 1Key0     1Key1    1Key2    1Key3    1Key4
+         * 1Key5     1Key6    1Key7    1Key8    1Key9
+         * 1Key10    1Key11   1Key12   1Key13   1Key14
+         */
         put("1Key0", new Integer[]{800, 200});
         put("1Key1", new Integer[]{1000, 200});
         put("1Key2", new Integer[]{1200, 200});
@@ -28,69 +33,126 @@ public class Shuo {
     }};
 
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws Exception {
 
-        //原始乐谱名称
-        String fileName = "夜的第七章(1).txt";
+        String[] bitch = new String[]{
+                "七里香.txt",
+                "亲爱的，那不是爱情.txt",
+                "体面.txt",
+                "你不是真正的快乐.txt",
+                "你是人间四月天（语瞳） 2(1).txt",
+                "十年人间(1).txt",
+                "可惜没如果(1).txt",
+                "吹梦到西洲.txt",
+                "天空之城(1).txt",
+                "奔赴星空.txt",
+                "好久不见.txt",
+                "想见你想见你想见你.txt",
+                "慢慢喜欢你.txt",
+                "我好想你(1).txt",
+                "放空.txt",
+                "明天会更好(1).txt",
+                "春风十里.txt",
+                "此生不换.txt",
+                "海底(1).txt",
+                "淋雨一直走.txt",
+                "烟火(1).txt",
+                "爱你.txt",
+                "生生世世不分离(1).txt",
+                "画心.txt",
+                "说好的幸福呢(1).txt",
+                "追光者.txt",
+                "送别.txt",
+                "雪落下的声音.txt",
+                "风居住的街道.txt",
+        };
+        for (int ii = 0; ii < bitch.length; ii++) {
 
-        String sb = readFile(fileName, "yp").replaceAll("2K", "1K");
-        String template = readFile("TEMPLATE.js", "yp");
-
-        List<YPBean> ypBeans = JSON.parseArray(sb, YPBean.class);
-        if (ypBeans == null || ypBeans.size() == 0) return;
-        StringBuilder sbOut = new StringBuilder("[");
-        LinkedList<SongNotesDTO> songNotesTemp = ypBeans.get(0).getSongNotes();
-        LinkedHashMap<Integer, List<SongNotesDTO>> collect = new LinkedHashMap<Integer, List<SongNotesDTO>>() {{
-            Map<Integer, List<SongNotesDTO>> collect1 = songNotesTemp.stream().collect(Collectors.groupingBy(songNotesDTO -> songNotesDTO.getTime()));
-            List<Integer> integers = collect1.keySet().stream().sorted().collect(Collectors.toList());
-            for (int i = 0; i < integers.size(); i++) {
-                put(integers.get(i), collect1.get(integers.get(i)));
-            }
-        }};
-
-        LinkedList<List<SongNotesDTO>> songNotes = new LinkedList<>(collect.values());
-
-        for (int i = 0; i < songNotes.size(); i++) {
-            List<SongNotesDTO> items = songNotes.get(i);
-            if (items.size() == 1) {
-                //单键
-                SongNotesDTO item = items.get(0);
-                String val = "[0,51," + JSON.toJSONString(key.get(item.getKey())) + "],";
-                sbOut.append("[");
-                sbOut.append(val);
-                sbOut.append("],");
-            } else {
-                sbOut.append("[");
-                //多键
-                for (int i1 = 0; i1 < items.size(); i1++) {
-                    SongNotesDTO item = items.get(i1);
-                    String val = "[0,51," + JSON.toJSONString(key.get(item.getKey())) + "],";
-                    sbOut.append(val);
+            //原始乐谱名称
+            String fileName = bitch[ii];
+            System.out.println("开始转译：" + fileName);
+//            String fileName = "明明就.txt",";
+            //SKY studio 原始乐谱目录
+            String ypDir = "/Users/satan/Documents/pft-project/imot-project/miot_project/ihive-miot-webserver/branches/guangyu/src/main/java/yp/";
+            //AutoJS 输出目录
+            String outDir = "/Users/satan/Documents/pft-project/imot-project/miot_project/ihive-miot-webserver/branches/guangyu/src/main/java/output/";
+            String sb, template;
+            List<YPBean> ypBeans = new ArrayList<>();
+            try {
+                sb = readFile(fileName, ypDir).replaceAll("[0-9]K", "1K");
+                template = readFile("TEMPLATE.js", ypDir);
+                ypBeans = JSON.parseArray(sb, YPBean.class);
+            } catch (Exception e) {
+                if(e instanceof FileNotFoundException) {
+                    System.out.println("找不到文件"+fileName);
+                    return;
                 }
-                sbOut.append("],");
-            }
-        }
-        sbOut.append("]");
+                System.out.println("格式不正确，正在转换--------");
 
-        LinkedList<Integer> sl = new LinkedList<>(collect.keySet());
-        LinkedList<Integer> slEnd = new LinkedList<Integer>() {{
-            for (int i = 0; i < sl.size(); i++) {
-                Integer item = sl.get(i);
-                if (i == 0) {
-                    add(item);
+                UTF8BOMConverter.readContentAndSaveWithEncoding(ypDir + fileName, "UTF-16", "UTF-8");
+
+                sb = readFile(fileName, ypDir).replaceAll("[0-9]K", "1K");
+                template = readFile("TEMPLATE.js", ypDir);
+                ypBeans = JSON.parseArray(sb, YPBean.class);
+            }
+
+            if (ypBeans == null || ypBeans.size() == 0) return;
+            StringBuilder sbOut = new StringBuilder("[");
+            LinkedList<SongNotesDTO> songNotesTemp = ypBeans.get(0).getSongNotes();
+            LinkedHashMap<Integer, List<SongNotesDTO>> collect = new LinkedHashMap<Integer, List<SongNotesDTO>>() {{
+                Map<Integer, List<SongNotesDTO>> collect1 = songNotesTemp.stream().collect(Collectors.groupingBy(songNotesDTO -> songNotesDTO.getTime()));
+                List<Integer> integers = collect1.keySet().stream().sorted().collect(Collectors.toList());
+                for (int i = 0; i < integers.size(); i++) {
+                    put(integers.get(i), collect1.get(integers.get(i)));
+                }
+            }};
+
+            LinkedList<List<SongNotesDTO>> songNotes = new LinkedList<>(collect.values());
+
+            for (int i = 0; i < songNotes.size(); i++) {
+                List<SongNotesDTO> items = songNotes.get(i);
+                if (items.size() == 1) {
+                    //单键
+                    SongNotesDTO item = items.get(0);
+                    sbOut.append("[").append("[0,51," + JSON.toJSONString(key.get(item.getKey())) + "],").append("],");
                 } else {
-                    add(item - sl.get(i - 1));
+                    sbOut.append("[");
+                    //多键
+                    for (int i1 = 0; i1 < items.size(); i1++) {
+                        SongNotesDTO item = items.get(i1);
+                        String val = "[0,51," + JSON.toJSONString(key.get(item.getKey())) + "],";
+                        sbOut.append(val);
+                    }
+                    sbOut.append("],");
                 }
             }
-        }};
-        template = template.replaceAll("\\[key\\]", sbOut.toString())
-                .replaceAll("\\[sleep\\]", JSON.toJSONString(slEnd));
-        writeStringToFile(template, fileName.split("\\.")[0], "output");
-        System.out.println("操作完成");
+            sbOut.append("]");
+
+            LinkedList<Integer> sl = new LinkedList<>(collect.keySet());
+            LinkedList<Integer> slEnd = new LinkedList<Integer>() {{
+                for (int i = 0; i < sl.size(); i++) {
+                    Integer item = sl.get(i);
+                    if (i == 0) {
+                        add(item);
+                    } else {
+                        add(item - sl.get(i - 1));
+                    }
+                }
+            }};
+            template = template.replaceAll("\\[key\\]", sbOut.toString())
+                    .replaceAll("\\[sleep\\]", JSON.toJSONString(slEnd));
+            writeStringToFile(template, fileName.split("\\.")[0], outDir);
+
+            System.out.println("----> 转译完成 <----");
+            System.out.println(template);
+
+            System.out.println("操作完成");
+        }
     }
 
-    public static String readFile(String fileName, String pdir) throws IOException {
-        String basePath = "/Users/satan/Documents/pft-project/imot-project/miot_project/ihive-miot-webserver/branches/guangyu/src/main/java/" + pdir + "/";
+    //读文件
+    public static String readFile(String fileName, String dir) throws IOException {
+        String basePath = dir;
         //名称
         File file = new File(basePath + fileName);
         if (!file.exists()) return null;
@@ -100,14 +162,16 @@ public class Shuo {
         BufferedReader br = new BufferedReader(new FileReader(file));
         String s = null;
         while ((s = br.readLine()) != null) {
+            s = new String(s.getBytes());
             sb.append(s).append("\n");
         }
         br.close();
         return sb.toString();
     }
 
-    public static String writeStringToFile(String data, String fileName, String pdir) throws IOException {
-        String basePath = "/Users/satan/Documents/pft-project/imot-project/miot_project/ihive-miot-webserver/branches/guangyu/src/main/java/" + pdir + "/";
+    //写字符串到文件
+    public static String writeStringToFile(String data, String fileName, String dir) throws IOException {
+        String basePath = dir;
         //名称
         File file = new File(basePath + fileName + ".js");
         if (!file.exists()) file.createNewFile();
