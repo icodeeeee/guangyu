@@ -168,6 +168,21 @@ public class Shuo {
         br.close();
         return sb.toString();
     }
+    //读文件
+    public static String readFile(File file) throws IOException {
+        if (!file.exists()) return null;
+
+        StringBuilder sb = new StringBuilder();
+
+        BufferedReader br = new BufferedReader(new FileReader(file));
+        String s = null;
+        while ((s = br.readLine()) != null) {
+            s = new String(s.getBytes());
+            sb.append(s).append("\n");
+        }
+        br.close();
+        return sb.toString();
+    }
 
     //写字符串到文件
     public static String writeStringToFile(String data, String fileName, String dir) throws IOException {
