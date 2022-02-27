@@ -5,6 +5,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class Shuo {
+    //饼子的键位
     public static Map<String, Integer[]> key = new HashMap<String, Integer[]>() {{
 
         //琴键点位，可自行开启触控显示定位每个琴键
@@ -31,40 +32,39 @@ public class Shuo {
         put("1Key13", new Integer[]{1400, 600});
         put("1Key14", new Integer[]{1600, 600});
     }};
+    //候亚东的键位
+//    public static Map<String, Integer[]> key = new HashMap<String, Integer[]>() {{
+//
+//        //琴键点位，可自行开启触控显示定位每个琴键
+//        /**
+//         * 1Key0     1Key1    1Key2    1Key3    1Key4
+//         * 1Key5     1Key6    1Key7    1Key8    1Key9
+//         * 1Key10    1Key11   1Key12   1Key13   1Key14
+//         */
+//        put("1Key0", new Integer[]{800, 200});
+//        put("1Key1", new Integer[]{1000, 200});
+//        put("1Key2", new Integer[]{1200, 200});
+//        put("1Key3", new Integer[]{1400, 200});
+//        put("1Key4", new Integer[]{1600, 200});
+//
+//        put("1Key5", new Integer[]{800, 400});
+//        put("1Key6", new Integer[]{1000, 400});
+//        put("1Key7", new Integer[]{1200, 400});
+//        put("1Key8", new Integer[]{1400, 400});
+//        put("1Key9", new Integer[]{1600, 400});
+//
+//        put("1Key10", new Integer[]{800, 600});
+//        put("1Key11", new Integer[]{1000, 600});
+//        put("1Key12", new Integer[]{1200, 600});
+//        put("1Key13", new Integer[]{1400, 600});
+//        put("1Key14", new Integer[]{1600, 600});
+//    }};
 
 
     public static void main(String[] args) throws Exception {
 
         String[] bitch = new String[]{
-                "七里香.txt",
-                "亲爱的，那不是爱情.txt",
-                "体面.txt",
-                "你不是真正的快乐.txt",
-                "你是人间四月天（语瞳） 2(1).txt",
-                "十年人间(1).txt",
-                "可惜没如果(1).txt",
-                "吹梦到西洲.txt",
-                "天空之城(1).txt",
-                "奔赴星空.txt",
-                "好久不见.txt",
-                "想见你想见你想见你.txt",
-                "慢慢喜欢你.txt",
-                "我好想你(1).txt",
-                "放空.txt",
-                "明天会更好(1).txt",
-                "春风十里.txt",
-                "此生不换.txt",
-                "海底(1).txt",
-                "淋雨一直走.txt",
-                "烟火(1).txt",
-                "爱你.txt",
-                "生生世世不分离(1).txt",
-                "画心.txt",
-                "说好的幸福呢(1).txt",
-                "追光者.txt",
-                "送别.txt",
-                "雪落下的声音.txt",
-                "风居住的街道.txt",
+                "热爱105℃的你.txt"
         };
         for (int ii = 0; ii < bitch.length; ii++) {
 
@@ -139,6 +139,10 @@ public class Shuo {
                     }
                 }
             }};
+            for (int i = 0; i < slEnd.size(); i++) {
+                if(slEnd.get(i)>=50)
+                slEnd.set(i,slEnd.get(i)-50);
+            }
             template = template.replaceAll("\\[key\\]", sbOut.toString())
                     .replaceAll("\\[sleep\\]", JSON.toJSONString(slEnd));
             writeStringToFile(template, fileName.split("\\.")[0], outDir);
